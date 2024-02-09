@@ -22,22 +22,24 @@
  * from Hyland Software. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Router } from '@angular/router';
-import { AppConfigService } from '@alfresco/adf-core';
+import { Component, ViewEncapsulation } from '@angular/core';
+// import { Router } from '@angular/router';
+// import { AppConfigService } from '@alfresco/adf-core';
 
 @Component({
   standalone: true,
   template: '',
   encapsulation: ViewEncapsulation.None
 })
-export class HomeComponent implements OnInit {
-  readonly DEFAULT_LANDING_PAGE = '/personal-files';
+export class HomeComponent {
+  // readonly DEFAULT_LANDING_PAGE = '/personal-files';
 
-  constructor(private appConfig: AppConfigService, private router: Router) {}
+  constructor() {}
+    // private appConfig: AppConfigService, private router: Router
+    // ) {}
 
-  ngOnInit() {
+  /* ngOnInit() {
     const landingPage = this.appConfig.get('landingPage', this.DEFAULT_LANDING_PAGE);
     this.router.navigateByUrl(landingPage);
-  }
+  } */
 }

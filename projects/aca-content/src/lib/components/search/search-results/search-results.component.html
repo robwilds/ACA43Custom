@@ -1,0 +1,140 @@
+<aca-page-layout>
+  <div class="aca-page-layout-header">
+    <aca-search-input></aca-search-input>
+    <div class="aca-search-toolbar-spacer"></div>
+    <aca-toolbar [items]="actions"></aca-toolbar>
+  </div>
+
+  <div class="aca-page-layout-content">
+    <div class="main-content">
+      <div class="adf-search-results">
+        <div class="adf-search-results__content">
+          <mat-progress-bar *ngIf="isLoading" color="primary" mode="indeterminate" aria-live="polite"> </mat-progress-bar>
+          <div class="adf-search-results__content-header aca-content">
+            <div class="aca-content__filter-set">
+              <p>{{ 'APP.BROWSE.SEARCH.FILTER_SET' | translate }}</p>
+              <adf-search-form></adf-search-form>
+            </div>
+            <mat-divider [vertical]="true" class="aca-content__divider"></mat-divider>
+            <div class="aca-content__advanced-filters">
+              <div class="aca-content__advanced-filters--header">
+                <p>{{ 'APP.BROWSE.SEARCH.ADVANCED_FILTERS' | translate }}</p>
+                <button
+                  mat-button
+                  adf-reset-search
+                  class="aca-content__reset-action"
+                  title="{{ 'APP.BROWSE.SEARCH.RESET_ACTION' | translate }}"
+                  [attr.aria-label]="'APP.BROWSE.SEARCH.RESET_ACTION' | translate ">
+                  {{ 'APP.BROWSE.SEARCH.RESET' | translate }}
+                </button>
+              </div>
+              <adf-search-filter-chips></adf-search-filter-chips>
+            </div>
+          </div>
+
+          <adf-document-list
+            #documentList
+            acaDocumentList
+            acaContextActions
+            [selectionMode]="'multiple'"
+            [sortingMode]="'server'"
+            [sorting]="sorting"
+            [imageResolver]="imageResolver"
+            [node]="$any(data)"
+            (node-dblclick)="handleNodeClick($event)"
+          >
+            <data-columns>
+              <data-column key="$thumbnail" type="image" [sr-title]="'ADF-DOCUMENT-LIST.LAYOUT.THUMBNAIL'" [sortable]="false">
+                <ng-template let-context>
+                  <aca-custom-thumbnail-column [context]="context"></aca-custom-thumbnail-column>
+                </ng-template>
+
+                <adf-data-column-header>
+                  <ng-template>
+                    <aca-search-action-menu (sortingSelected)="onSearchSortingUpdate($event)"></aca-search-action-menu>
+                  </ng-template>
+                </adf-data-column-header>
+              </data-column>
+
+              <data-column key type="text"  class="adf-ellipsis-cell adf-expand-cell-5" title="APP.DOCUMENT_LIST.COLUMNS.NAME" [sortable]="false">
+                <ng-template let-context>
+                  <aca-search-results-row [context]="context"></aca-search-results-row>
+                </ng-template>
+              </data-column>
+
+              <data-column key="properties"  title="Description" class="adf-expand-cell-3" [sortable]="false" *ngIf="!isSmallScreen">
+                <ng-template let-context>
+                  <span class="adf-datatable-cell-value adf-ellipsis-cell">
+                  {{context.row?.node?.entry?.properties && context.row?.node?.entry?.properties['cm:description']}}
+                  </span>
+                </ng-template>
+              </data-column>
+
+              <data-column key="content.sizeInBytes" type="fileSize" title="APP.DOCUMENT_LIST.COLUMNS.SIZE" class="adf-no-grow-cell adf-ellipsis-cell" [sortable]="false" *ngIf="!isSmallScreen"></data-column>
+              <data-column key="modifiedAt" type="date" title="APP.DOCUMENT_LIST.COLUMNS.MODIFIED_ON" class="adf-no-grow-cell adf-ellipsis-cell" format="timeAgo" [sortable]="false" *ngIf="!isSmallScreen"></data-column>
+              <data-column key="modifiedByUser.displayName" title="APP.DOCUMENT_LIST.COLUMNS.MODIFIED_BY" class="adf-no-grow-cell adf-ellipsis-cell" [sortable]="false" *ngIf="!isSmallScreen"></data-column>
+              <data-column key="$tags" type="text" title="APP.DOCUMENT_LIST.COLUMNS.TAGS" class="adf-full-width adf-expand-cell-4" [sortable]="false">
+                <ng-template let-context>
+                  <aca-tags-column [context]="context"></aca-tags-column>
+                </ng-template>
+              </data-column>
+            </data-columns>
+
+            <adf-custom-empty-content-template>
+              <ng-container *ngIf="data">
+                <div class="empty-search__block" aria-live="polite">
+                  <p class="empty-search__text">
+                    {{ 'APP.BROWSE.SEARCH.NO_RESULTS' | translate }}
+                  </p>
+                </div>
+              </ng-container>
+            </adf-custom-empty-content-template>
+          </adf-document-list>
+
+          <adf-pagination *ngIf="totalResults > 0" acaPagination [target]="documentList" (change)="onPaginationChanged($event)">
+          </adf-pagination>
+        </div>
+      </div>
+    </div>
+    <div
+      [ngClass]="
+        (infoDrawerPreview$ | async) === true ? 'adf-search-results--right_panel_section-extended' : 'adf-search-results--right_panel_section'
+      "
+      *ngIf="infoDrawerOpened$ | async"
+    >
+      <adf-alfresco-viewer
+        class="adf-search-results--embedded_viewer"
+        [nodeId]="selection.last.entry.id"
+        *ngIf="infoDrawerPreview$ | async; else infoDrawerPanel"
+      >
+        <adf-viewer-toolbar>
+          <div class="adf-search-results--preview-toolbar">
+            <div>
+              <button mat-icon-button title="{{ 'ADF_VIEWER.ACTIONS.CLOSE' | translate }}" (click)="onDrawerClosed()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div>
+              <button
+                mat-icon-button
+                title="{{ 'ADF_VIEWER.ACTIONS.PREVIEW' | translate }}"
+                color="accent"
+                class="adf-search-results--visibility_button"
+              >
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button title="{{ 'ADF_VIEWER.ACTIONS.CLOSE' | translate }}" (click)="onPreviewClosed()">
+                <mat-icon>info_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </adf-viewer-toolbar>
+      </adf-alfresco-viewer>
+      <ng-template #infoDrawerPanel>
+        <div class="aca-sidebar">
+          <aca-info-drawer [node]="selection.last"></aca-info-drawer>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</aca-page-layout>

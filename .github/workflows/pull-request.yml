@@ -1,0 +1,249 @@
+name: "Pull request"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASE_URL: ${{ secrets.PIPELINE_ENV_URL }}
+  ADMIN_EMAIL: ${{ secrets.PIPELINE_ADMIN_USERNAME }}
+  ADMIN_PASSWORD: ${{ secrets.PIPELINE_ADMIN_PASSWORD }}
+  HR_USER: ${{ secrets.HR_USER }}
+  HR_USER_PASSWORD: ${{ secrets.HR_USER_PASSWORD }}
+  SUPERADMIN_EMAIL: ${{ secrets.SUPERADMIN_EMAIL }}
+  SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
+  IDENTITY_USER_EMAIL: ${{ secrets.IDENTITY_USER_EMAIL }}
+  IDENTITY_USER_PASSWORD: ${{ secrets.IDENTITY_USER_PASSWORD }}
+  CONTENT_IDENTITY_USERNAME: ${{ secrets.CONTENT_IDENTITY_USERNAME }}
+  CONTENT_IDENTITY_PASSWORD: ${{ secrets.CONTENT_IDENTITY_PASSWORD }}
+  SCREENSHOT_USERNAME: ${{ secrets.SCREENSHOT_USERNAME }}
+  SCREENSHOT_PASSWORD: ${{ secrets.SCREENSHOT_PASSWORD}}
+  AWS_REGION: "eu-west-2"
+  CONTENT_CE_DIST_PATH: "./dist/content-ce"
+  PLAYWRIGHT_E2E_HOST: ${{ secrets.PLAYWRIGHT_E2E_HOST }}
+  GH_BUILD_NUMBER: ${{ github.run_id }}
+  MAXINSTANCES: 2
+  RETRY_COUNT: 2
+
+jobs:
+  lint:
+    name: 'lint'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run affected:lint -- --base=origin/develop
+      - run: npm run stylelint
+
+  build:
+    name: 'build'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - uses: ./.github/actions/before-install
+      - run: npm ci
+      - run: npm run build -- $BUILD_OPTS
+      - name: upload job artifact
+        if: ${{ success() }}
+        uses: ./.github/actions/upload-job-artifact
+        with:
+          artifact: $CONTENT_CE_DIST_PATH
+          output: $S3_DBP_FOLDER/alfresco-content-app.tar.bz2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+  unit-tests:
+    needs: [lint, build]
+    name: "Unit tests: ${{ matrix.unit-tests.name }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        unit-tests:
+          - name: "aca-content"
+          - name: "aca-shared"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - uses: ./.github/actions/before-install
+      - run: npm ci
+      - run: npm run affected:test -- --browsers=ChromeHeadless --watch=false $TEST_OPTS --base=origin/develop
+
+  e2es:
+    needs: [lint, build, unit-tests]
+    name: 'E2e test suites: ${{ matrix.e2e-suites.name }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        e2e-suites:
+          - name: "listViews,navigation"
+            id: 1
+          - name: "search"
+            id: 2
+          - name: "viewer,infoDrawer,extensions"
+            id: 3
+          - name: "shareActions"
+            id: 4
+          - name: "pagination"
+            id: 5
+          - name: "actionsAvailableFilesFolders"
+            id: 6
+          - name: "actionsAvailableLibraries,actionsAvailableNewMenu"
+            id: 7
+          - name: "actionsAvailableSpecialPermissions"
+            id: 8
+          - name: "copyMoveActions"
+            id: 9
+          - name: "createActions"
+            id: 10
+          - name: "deleteActions"
+            id: 11
+          - name: "editActions,favoriteActions"
+            id: 12
+          - name: "libraryActions"
+            id: 13
+          - name: "uploadDownloadActions"
+            id: 14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - uses: ./.github/actions/before-install
+      - run: npm ci
+      - uses: ./.github/actions/before-e2e
+        with:
+          from: "$S3_DBP_FOLDER/alfresco-content-app.tar.bz2"
+          to: $CONTENT_CE_DIST_PATH
+          id: ${{ matrix.e2e-suites.id }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: ./.github/actions/run-e2e
+        with:
+          options: "--suite=${{ matrix.e2e-suites.name }}"
+          artifact-name: ${{ matrix.e2e-suites.name }}
+      - uses: ./.github/actions/after-e2e
+
+  e2es-playwright:
+    needs: [lint, build, unit-tests]
+    name: 'E2e test suites: Playwright'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        e2e-suites:
+          - name: "actions"
+            id: 1
+          - name: "folder-rules"
+            id: 2
+          - name: "viewer"
+            id: 3
+          - name: "authentication"
+            id: 4
+          - name: "navigation"
+            id: 5
+          - name: "special-permissions"
+            id: 6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - uses: ./.github/actions/before-install
+      - run: npm ci
+      - uses: ./.github/actions/before-e2e
+        with:
+          from: "$S3_DBP_FOLDER/alfresco-content-app.tar.bz2"
+          to: $CONTENT_CE_DIST_PATH
+          id: 15
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: before playwright
+        shell: bash
+        run: npx playwright install chromium
+      - uses: ./.github/actions/run-e2e-playwright
+        with:
+          options: "${{ matrix.e2e-suites.name }}"
+          artifact-name: ${{ matrix.e2e-suites.name }}
+          test-runner: playwright
+      - uses: ./.github/actions/after-e2e
+
+  finalize:
+    if: ${{ always() }}
+    needs: [lint, build, unit-tests, e2es, e2es-playwright]
+    name: 'Finalize'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check previous jobs status
+        if: >-
+            ${{
+                contains(needs.*.result, 'failure')
+              || contains(needs.*.result, 'cancelled')
+            }}
+        run: exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Extract commit message
+        uses: Alfresco/alfresco-build-tools/.github/actions/get-commit-message@v1.35.0
+
+      - name: Check ADF link
+        shell: bash
+        run: |
+          if [[ $COMMIT_MESSAGE == *"[link-adf:"* ]]; then
+            BRANCH=`echo $COMMIT_MESSAGE | grep -o "\[link-adf\:[^]]*\]" | sed -e 's#\[link-adf:##g' | sed -e 's#\]##g'`
+            echo -e "\e[31mPRs are not mergeable with conditional build. This build was run with custom ADF branch: $BRANCH \e[0m"
+            exit 1
+          fi;
+
+

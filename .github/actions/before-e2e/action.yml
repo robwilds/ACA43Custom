@@ -1,0 +1,65 @@
+name: "Before e2e"
+description: "Before e2e"
+
+inputs:
+  from:
+    description: 'path to download the artifact'
+    required: true
+    type: string
+  to:
+    description: 'path to save artifact to'
+    required: true
+    type: string
+  id:
+    description: 'test suite id'
+    required: true
+    type: number
+  aws-access-key-id:
+    description: 'aws access key id'
+    required: true
+    type: string
+  aws-secret-access-key:
+    description: 'aws secret access key'
+    required: true
+    type: string
+  aws-region:
+    description: 'aws region'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check content UP
+      shell: bash
+      run: ./node_modules/@alfresco/adf-cli/bin/adf-cli check-cs-env --host $BASE_URL -u $ADMIN_EMAIL -p $ADMIN_PASSWORD || exit 1
+
+    - name: Download artifacts
+      uses: ./.github/actions/download-job-artifact
+      with:
+        artifact: ${{ inputs.from }}
+        output: ${{ inputs.to }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Install google chrome
+      shell: bash
+      run: |
+          wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.133-1_amd64.deb
+          sudo apt install -y --allow-downgrades ./google-chrome-stable_114.0.5735.133-1_amd64.deb
+          sudo ln -s /usr/bin/google-chrome /usr/bin/chrome
+          chrome --version
+
+    - name: Update webdriver-manager
+      shell: bash
+      run: |
+        npm install -g webdriver-manager
+        if [ "$CI" = "true" ]; then
+          export chrome=$(google-chrome --product-version)
+          echo "Updating wevdriver-manager with chromedriver: $chrome."
+          webdriver-manager update --gecko=false --versions.chrome=$chrome
+        else
+          echo "Updating wedriver-manager with latest chromedriver, be sure to use evergreen Chrome."
+          webdriver-manager update --gecko=false
+        fi

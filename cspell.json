@@ -1,0 +1,51 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [
+    ".*",
+    "CODEOWNERS",
+    "package.json"
+  ],
+  "words": [
+    "Hyland",
+    "ADDFEATURES",
+    "afts",
+    "androidamw",
+    "CHECKIN",
+    "datatable",
+    "dateitem",
+    "datetimepicker",
+    "domcontentloaded",
+    "filelink",
+    "folderlink",
+    "formcontrolname",
+    "hruser",
+    "iosamw",
+    "mobileapps",
+    "mysites",
+    "networkidle",
+    "noderef",
+    "pdfjs",
+    "PNAME",
+    "QNAME",
+    "qshare",
+    "repo",
+    "salesuser",
+    "sharedlinks",
+    "sidenav",
+    "simpletask",
+    "succes",
+    "superadmin",
+    "textitem",
+    "thumbnailed",
+    "versionable",
+    "sfdc"
+  ],
+  "dictionaries": [
+    "html",
+    "en-gb",
+    "en_US",
+    "typescript",
+    "softwareTerms"
+  ]
+}

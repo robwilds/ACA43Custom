@@ -1,0 +1,135 @@
+.sidenav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: hidden;
+  background: var(--theme-sidenav-background-color);
+
+  &-header {
+    padding: 32px 0;
+
+    &-title {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      height: 32px;
+      padding: 0 24px;
+
+      &-logo {
+        img {
+          cursor: pointer;
+          height: 28px;
+          vertical-align: middle;
+          transform: scale(0.7);
+        }
+      }
+
+      &-text {
+        flex: 1;
+        color: var(--theme-selected-text-color);
+        padding-left: 12px;
+        letter-spacing: 0.25px;
+        font-style: normal;
+        font-weight: 400;
+        font-size: var(--theme-body-1-font-size);
+        cursor: pointer;
+      }
+    }
+  }
+
+  .section:last-child {
+    border-bottom: 0;
+  }
+
+  .section-sub-actions {
+    overflow-y: auto;
+
+    .mat-expansion-panel {
+      width: 100%;
+      background-color: unset;
+      box-shadow: none;
+      border-radius: 0;
+
+      &-header {
+        padding: 0 32px 0 0;
+        display: flex;
+        align-items: center;
+        border: none;
+      }
+
+      &-header-title {
+        display: flex;
+        flex-direction: row;
+
+        .mat-button {
+          line-height: 32px;
+          align-items: center;
+          border: none;
+        }
+
+        .action-button__label {
+          font-size: var(--theme-caption-font-size);
+        }
+      }
+
+      &-body {
+        padding: 0 0 16px;
+        font-size: var(--theme-body-1-font-size);
+
+        .mat-button {
+          line-height: 32px;
+          align-items: center;
+
+          .mat-button-wrapper {
+            display: flex;
+          }
+        }
+      }
+
+      .mat-expansion-indicator {
+        display: flex;
+        align-content: center;
+      }
+
+      .mat-expansion-indicator::after {
+        transform: rotate(226deg);
+      }
+    }
+
+    .mat-expansion-panel-header:hover {
+      background: var(--adf-theme-background-hover-color);
+    }
+
+    .item {
+      flex-direction: row;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      width: 100%;
+      user-select: none;
+
+      &:hover .action-button__label {
+        color: var(--theme-selected-text-color);
+      }
+    }
+
+    .action-button {
+      color: var(--theme-action-button-text-color);
+      height: 32px;
+      padding: 0 24px;
+      border-radius: 0;
+      line-height: 32px;
+    }
+
+    .full-width {
+      display: flex;
+      width: 100%;
+    }
+
+    .action-button--active {
+      color: var(--theme-selected-text-color);
+      background: var(--theme-selected-background-color);
+    }
+  }
+}

@@ -1,0 +1,48 @@
+<aca-page-layout>
+  <div class="aca-page-layout-header">
+    <adf-breadcrumb [root]="title" [folderNode]="node" (navigate)="onBreadcrumbNavigate($event)"> </adf-breadcrumb>
+    <aca-toolbar [items]="actions"></aca-toolbar>
+  </div>
+
+  <div class="aca-page-layout-content">
+    <div class="acs-details-container">
+      <div class="acs-details-title">
+        <div class="acs-details-breadcrumb" role="heading" aria-level="2" *ngIf="node">
+          <span class="acs-details-breadcrumb-library"> {{ node.name }} </span>
+          -
+          <span class="acs-details-breadcrumb-item">{{ 'APP.INFO_DRAWER.TITLE' | translate }}</span>
+        </div>
+        <button
+          class="aca-close-details-button"
+          mat-icon-button
+          data-automation-id="close-library"
+          title="{{ 'APP.INFO_DRAWER.CLOSE' | translate }}"
+          (click)="goBack()">
+          <mat-icon>fullscreen_exit</mat-icon>
+        </button>
+      </div>
+
+      <mat-tab-group [selectedIndex]="activeTab" class="aca-details-tabs" animationDuration="0">
+        <mat-tab label="{{ 'APP.INFO_DRAWER.TABS.PROPERTIES' | translate }}">
+          <ng-template matTabContent>
+            <app-metadata-tab *ngIf="node && !isLoading; else loading" [node]="node"></app-metadata-tab>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="{{ 'APP.INFO_DRAWER.TABS.COMMENTS' | translate }}">
+          <ng-template matTabContent>
+            <app-comments-tab *ngIf="node && !isLoading; else loading" [node]="node"></app-comments-tab>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="{{ 'APP.INFO_DRAWER.TABS.PERMISSIONS' | translate }}">
+          <ng-template matTabContent>
+            <adf-permission-list *ngIf="node && !isLoading; else loading" [nodeId]="node.id"></adf-permission-list>
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+</aca-page-layout>
+
+<ng-template #loading>
+  <mat-progress-bar color="primary" mode="indeterminate"></mat-progress-bar>
+</ng-template>

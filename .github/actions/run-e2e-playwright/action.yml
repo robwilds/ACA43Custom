@@ -1,0 +1,38 @@
+name: "Run e2e Playwright"
+description: "Run e2e Playwright"
+
+inputs:
+  options:
+    description: 'Options'
+    required: true
+    type: string
+  test-runner:
+    description: 'Test runner'
+    required: false
+    type: string
+    default: 'Playwright'
+  artifact-name:
+    description: Name of the artifact cache
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Setup and run with options
+      shell: bash
+      run: |
+        npm start > /dev/null &\
+
+        echo "Running playwright tests with options ${{ inputs.options }}"
+        sleep 90
+        npx nx run ${{ inputs.options }}-e2e:e2e
+
+
+    - name: Upload E2Es results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: test-results/

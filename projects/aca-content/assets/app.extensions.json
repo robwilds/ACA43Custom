@@ -1415,6 +1415,20 @@
         },
         "categories": [
           {
+            "id": "CBAentrynumber",
+            "name": "CBA Entry Number",
+            "enabled": true,
+            "expanded": true,
+            "component": {
+                "selector": "text",
+                "settings": {
+                    "pattern": "cba:entryNbr:'(.*?)'",
+                    "field": "cba:entryNbr",
+                    "placeholder": "Enter the Entry Number"
+                }
+            }
+        },
+          {
             "id": "logic",
             "name": "SEARCH.CATEGORIES.LOGIC",
             "enabled": true,

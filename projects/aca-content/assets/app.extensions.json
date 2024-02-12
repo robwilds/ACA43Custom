@@ -1370,7 +1370,7 @@
             }
           ]
         },
-        "aca:triggeredOnChange": false,
+        "aca:triggeredOnChange": true,
         "resetButton": true,
         "filterQueries": [
           { "query": "+TYPE:'cm:folder' OR +TYPE:'cm:content'" },
@@ -2133,6 +2133,17 @@
           "order": 20
         },
         {
+          "id": "cbaentrynbr",
+          "key": "cba:entryNbr",
+          "title": "cba Entry Number",
+          "type": "text",
+          "class": "adf-ellipsis-cell adf-expand-cell-5",
+          "sortable": true,
+          "template": "",
+          "desktopOnly": false,
+          "order": 21
+        },
+        {
           "id": "app.files.size",
           "key": "content.sizeInBytes",
           "sortingKey": "sizeInBytes",
@@ -2588,6 +2599,17 @@
           "template": "app.columns.libraryName",
           "desktopOnly": false,
           "order": 20
+        },
+        {
+          "id": "cbaentrynbr",
+          "key": "cba:entryNbr",
+          "title": "cba Entry Number",
+          "type": "text",
+          "class": "adf-ellipsis-cell adf-expand-cell-5",
+          "sortable": true,
+          "template": "",
+          "desktopOnly": false,
+          "order": 21
         },
         {
           "id": "app.favorite.libraries.description",
